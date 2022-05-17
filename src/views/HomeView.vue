@@ -1,6 +1,8 @@
 <template>
 	<div class="w-full flex flex-col h-screen content-center relative">
+		<!-- modal -->
 		<transition name="fade">
+			<!-- add people modal -->
 			<div v-if="isModalVisible">
 				<div class="absolute bg-black opacity-70 inset-0 z-0"></div>
 				<div
@@ -42,23 +44,49 @@
 					</div>
 				</div>
 			</div>
+			<!-- showCongrats modal -->
+
+			<div v-if="isSorted">
+				<div class="absolute bg-black opacity-70 inset-0 z-0"></div>
+				<div
+					class="max-w-xs md:max-w-md lg:max-w-lg p-3 mx-auto my-auto rounded-xl absolute shadow-lg bg-white top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+				>
+					<div>
+						<div class="px-4">
+							<img class="w-full" src="@/assets/congrats.svg" alt srcset />
+						</div>
+						<div class="py-4">
+							<h1
+								class="text-lg md:text-xl font-medium text-center"
+							>Your time: {{$m.utc(sortingTime).format('HH:mm:ss') }}</h1>
+						</div>
+						<button
+							class="mb-2 md:mb-0 border px-5 py-2 text-sm shadow-sm font-medium rounded-md text-white bg-primary hover:shadow-lg hover:bg-opacity-80"
+							@click="onCloseDialog"
+						>Start Again</button>
+					</div>
+				</div>
+			</div>
 		</transition>
 		<div class="container">
-			<div class="my-6 xl:my-12">
-				<div class="flex items-start justify-between">
+			<div class="xl:my-12">
+				<!-- sorting training system section -->
+				<section class="flex items-center justify-between">
 					<div>
 						<h1 class="text-lg md:text-2xl font-bold">Sorting Training System</h1>
 						<stopWatch
-							:class="isStartTimer? 'mt-4 transition-all duration-400 w-80 translate-x-7 animate-bounce ' : 'w-0'"
+							:class="isStartTimer? 'mt-4 w-28 md:w-60   translate-x-7 animate-bounce ' : 'hidden'"
 							:isStartTimer="isStartTimer"
+							:isSorted="isSorted"
+							@sortedTime="onSortedTime"
 						/>
 					</div>
 
 					<button
-						class="bg-primary px-4 py-5 md:px-9 md:py-4 text-white rounded-sm md:rounded-lg font-bold"
+						class="bg-primary px-2 py-2 md:px-9 md:py-4 text-white rounded-md lg:rounded-lg font-bold"
 						@click="isModalVisible = !isModalVisible"
 					>Start sorting!</button>
-				</div>
+				</section>
 				<div v-if="!sortingData.length" class="grid place-content-center">
 					<h4 class="font-bold text-primary text-2xl mb-4">Add people and sorting</h4>
 					<img src="@/assets/emptyTable.svg" alt srcset />
@@ -66,8 +94,9 @@
 				<div v-else class="mt-8">
 					<BaseDataTable
 						:tableHeaders="headersData"
-						:list.sync="isSortedArray"
+						:list.sync="sortingData"
 						:handleListChange="handleListChange"
+						@isSorted="onIsSorted"
 					></BaseDataTable>
 				</div>
 			</div>
@@ -100,33 +129,16 @@ export default {
 				'Email',
 				'Number of Potatoes',
 				'Location',
-			]
+			],
+			showCongrats: false,
+			sortingTime: null,
+			isSorted: false
 		}
 	},
 	computed: {
 		isValidAmount() {
 			return +this.amountOfPeople >= 20 && +this.amountOfPeople <= 80
 		},
-
-		isSortedArray() {
-			let sorted = false
-			return this.sortingData.length && this.sortingData.map((item, index) => {
-				if (index !== this.sortingData.length - 1 && item.number_of_potatoes < this.sortingData[index + 1].number_of_potatoes && !sorted) {
-					console.log(item.number_of_potatoes, this.sortingData[index + 1].number_of_potatoes);
-					item.isSorted = true
-					return item
-				}
-				else {
-					sorted = true
-					item.isSorted = false
-					return item
-				}
-			})
-		},
-		isSorted() {
-			return this.sortingData.length && this.sortingData.every((item) => item.isSorted === true)
-
-		}
 
 	},
 	methods: {
@@ -158,12 +170,32 @@ export default {
 			console.log(res, err);
 			res && this.$toast.success("People Added  successfully")
 			err && this.$toast.error("Something went wrong")
+			this.isModalVisible = false
+			this.isStartTimer = true
 			this.loading = false
+			this.amountOfPeople = null
 
 		},
 		startSorting() {
 			console.log('startSorting');
-		}
+		},
+		onSortedTime(data) {
+			console.log(data, 'onSortedTimeonSortedTimeonSortedTime');
+			this.sortingTime = data
+			this.$toast.success("Sorting Completed")
+		},
+		onIsSorted(value) {
+			console.log('onIsSortedonIsSorted', value);
+			this.isSorted = value
+			this.isStartTimer = false
+
+		},
+		onCloseDialog() {
+			this.isStartTimer = false
+			this.isSorted = false
+			this.sortingTime = null
+			this.sortingData = []
+		},
 	},
 
 }
