@@ -187,7 +187,7 @@ export default {
 		onIsSorted(value) {
 			console.log('onIsSortedonIsSorted', value);
 			this.isSorted = value
-			this.isStartTimer = false
+			this.isSorted ? this.isStartTimer = false : ''
 
 		},
 		onCloseDialog() {
